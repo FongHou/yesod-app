@@ -210,14 +210,16 @@ instance YesodAuth App where
     -- Override the above two destinations when a Referer: header is present
     redirectToReferer _ = True
 
-    -- authenticate creds = runDB $ do
-    --     x <- getBy $ UniqueUser $ credsIdent creds
-    --     case x of
-    --         Just (Entity uid _) -> return $ Authenticated uid
-    --         Nothing -> Authenticated <$> insert User
-    --             { userIdent = credsIdent creds
-    --             , userPassword = Nothing
-    --             }
+    -- authenticate _creds = throwString "Not Authenticated"
+
+    authenticate creds = liftHandler $ runDB $ do
+        x <- getBy $ UniqueUser $ credsIdent creds
+        case x of
+            Just (Entity uid _) -> return $ Authenticated uid
+            Nothing -> Authenticated <$> insert User
+                { userIdent = credsIdent creds
+                , userPassword = Nothing
+                }
 
     -- You can add other plugins like Google Email, email or OAuth here
     authPlugins app = [authOpenId Claimed []] ++ extraAuthPlugins
