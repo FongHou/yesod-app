@@ -33,7 +33,6 @@ module DevelMain where
 import Prelude
 import Application (getApplicationRepl, shutdownApp)
 
-import Control.Exception (finally)
 import Control.Monad ((>=>))
 import Control.Concurrent
 import Data.IORef
@@ -72,12 +71,12 @@ update = do
     start :: MVar () -- ^ Written to when the thread is killed.
           -> IO ThreadId
     start done = do
-        (port, site, app) <- getApplicationRepl
-        forkIO (finally (runSettings (setPort port defaultSettings) app)
-                        -- Note that this implies concurrency
-                        -- between shutdownApp and the next app that is starting.
-                        -- Normally this should be fine
-                        (putMVar done () >> shutdownApp site))
+      (port, site, app) <- getApplicationRepl
+      forkFinally (runSettings (setPort port defaultSettings) app)
+                  -- Note that this implies concurrency
+                  -- between shutdownApp and the next app that is starting.
+                  -- Normally this should be fine
+                  (\_ -> putMVar done () >> shutdownApp site)
 
 -- | kill the server
 shutdown :: IO ()
