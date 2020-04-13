@@ -1,0 +1,17 @@
+
+:set -Wall
+:set -Wno-type-defaults
+:set -Wno-name-shadowing
+:set -Wno-unused-imports
+:set -Wno-unused-top-binds
+:set -Wno-missing-signatures
+:set -Wno-partial-type-signatures
+:set -Wno-star-is-type
+
+-- :set -ddump-deriv
+-- :set -ddump-splices
+-- :set -dsuppress-uniques
+-- :set -dsuppress-module-prefixes
+
+:set -iapp:src
+:set -DDEVELOPMENT

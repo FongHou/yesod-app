@@ -64,8 +64,7 @@ mkYesodData "App" $(parseRoutesFile "config/routes")
 type Form x = Html -> MForm (HandlerFor App) (FormResult x, Widget)
 
 -- | A convenient synonym for database access functions.
-type DB a = forall (m :: * -> *).
-    (MonadIO m, Functor m) => ReaderT SqlBackend m a
+type DB a = forall m. MonadIO m => ReaderT SqlBackend m a
 
 -- Please see the documentation for the Yesod typeclass. There are a number
 -- of settings which can be configured by overriding methods here.
@@ -147,7 +146,7 @@ instance Yesod App where
     authRoute _ = Just $ AuthR LoginR
 
     -- Routes not requiring authentication.
-    isAuthorized (AuthR _) _ = return Authorized
+    isAuthorized (AuthR _) _ = isAuthenticated -- return Authorized
     isAuthorized CommentR _ = return Authorized
     isAuthorized HomeR _ = return Authorized
     isAuthorized FaviconR _ = return Authorized
@@ -177,10 +176,10 @@ instance Yesod App where
 
     -- What messages should be logged. The following includes all messages when
     -- in development, and warnings and errors in production.
-    -- shouldLog app _source level =
-    --     appShouldLogAll (appSettings app)
-    --         || level == LevelWarn
-    --         || level == LevelError
+    shouldLogIO app _source level = return $
+        appShouldLogAll (appSettings app)
+            || level == LevelWarn
+            || level == LevelError
 
     makeLogger = return . appLogger
 
