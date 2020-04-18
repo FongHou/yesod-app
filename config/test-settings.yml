@@ -7,5 +7,7 @@ database:
   #
   #   database: "_env:PGDATABASE:yesod-web_test"
   database: yesod-web_test
+  user: yesod-web
+  password: yesod-web
 
 auth-dummy-login: true

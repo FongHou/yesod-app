@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a75acf86380682cebf290997d14a9e335e339565911a1b063e7527ad1c440252
+-- hash: ea109d93fa12a7edd6303d3eb4d60accc5e0137f1c964b3b27fc85e67fdd82b7
 
 name:           yesod-app
 version:        0.0.0
@@ -22,7 +22,9 @@ flag library-only
 
 library
   exposed-modules:
+      Api
       Application
+      Auth.JWT
       Foundation
       Handler.Comment
       Handler.Common
@@ -54,12 +56,18 @@ library
     , foreign-store
     , hjsmin
     , http-conduit
+    , jwt
     , monad-control
     , monad-logger
     , persistent
     , persistent-postgresql
     , persistent-template
     , safe
+    , servant
+    , servant-auth
+    , servant-auth-server
+    , servant-rawm
+    , servant-server
     , shakespeare
     , template-haskell
     , text
@@ -108,12 +116,18 @@ executable yesod-app
     , foreign-store
     , hjsmin
     , http-conduit
+    , jwt
     , monad-control
     , monad-logger
     , persistent
     , persistent-postgresql
     , persistent-template
     , safe
+    , servant
+    , servant-auth
+    , servant-auth-server
+    , servant-rawm
+    , servant-server
     , shakespeare
     , template-haskell
     , text
@@ -166,12 +180,18 @@ test-suite test
     , hjsmin
     , hspec >=2.0.0
     , http-conduit
+    , jwt
     , monad-control
     , monad-logger
     , persistent
     , persistent-postgresql
     , persistent-template
     , safe
+    , servant
+    , servant-auth
+    , servant-auth-server
+    , servant-rawm
+    , servant-server
     , shakespeare
     , template-haskell
     , text

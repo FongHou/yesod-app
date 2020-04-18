@@ -18,5 +18,5 @@ cabal.sandbox.config
 *.keter
 *~
 \#*
-yesod-web.cabal
 tags
+.hspec-failures
