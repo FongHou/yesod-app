@@ -5,6 +5,7 @@ module Auth.JWT (lookupToken, jsonToToken, tokenToJson) where
 
 import Import.NoFoundation
 import Data.Char (isSpace)
+import Data.Text (toLower)
 import Data.Map as Map (fromList, (!?))
 import Web.JWT as JWT
 
@@ -31,6 +32,7 @@ jwtKey = "jwt"
 
 extractToken :: Text -> Maybe Text
 extractToken auth
-  | toLower x == "token" = Just $ dropWhile isSpace y
-  | otherwise            = Nothing
-  where (x, y) = break isSpace auth
+  | toLower (toText x) == "token" = Just $ toText $ dropWhile isSpace y
+  | otherwise = Nothing
+  where
+    (x, y) = break isSpace (toString auth)

@@ -28,7 +28,7 @@ import Api
 import Control.Monad.Logger (liftLoc, runLoggingT)
 
 import Database.Persist.Postgresql
-       (createPostgresqlPool, pgConnStr, pgPoolSize, runSqlPool)
+       (createPostgresqlPool, pgConnStr, pgPoolSize)
 
 import Handler.Comment
 -- Import all relevant handler modules here.
@@ -41,6 +41,7 @@ import Import hiding (Proxy(..))
 
 import Language.Haskell.TH.Syntax (qLocation)
 
+import Network.HTTP.Client.Conduit (newManager)
 import Network.Wai (Middleware)
 import Network.Wai.Handler.Warp
        (Settings, defaultSettings, defaultShouldDisplayException, getPort

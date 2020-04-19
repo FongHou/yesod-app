@@ -6,6 +6,7 @@ host:           "_env:HOST:*4" # any IPv4 host
 port:           "_env:PORT:3000"
 ip-from-header: "_env:IP_FROM_HEADER:false"
 jwt-secret:     "_env:JWT_SECRET:supersecret"
+cors-origin-whitelist: ["_env:CORS_ORIGIN:http://localhost:8080"]
 
 # Default behavior: determine the application root from the request headers.
 # Uncomment to set an explicit approot
@@ -21,8 +22,8 @@ jwt-secret:     "_env:JWT_SECRET:supersecret"
 #
 # detailed-logging: false
 # should-log-all: false
-reload-templates: true
-mutable-static: true
+# reload-templates: true
+# mutable-static: true
 # skip-combining: false
 # auth-dummy-login : false
 
@@ -38,5 +39,5 @@ database:
   database: "_env:PGDATABASE:yesod-web"
   poolsize: "_env:PGPOOLSIZE:10"
 
-copyright: Insert copyright statement here
+copyright:  ""
 #analytics: UA-YOURCODE

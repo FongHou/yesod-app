@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ea109d93fa12a7edd6303d3eb4d60accc5e0137f1c964b3b27fc85e67fdd82b7
+-- hash: 84f6b8284352bf75ed59bc818162e84d185f700530ddf9c8dc02779f3e6ee2d3
 
 name:           yesod-app
 version:        0.0.0
@@ -55,6 +55,8 @@ library
     , file-embed
     , foreign-store
     , hjsmin
+    , hspec >=2.0.0
+    , http-client
     , http-conduit
     , jwt
     , monad-control
@@ -62,6 +64,7 @@ library
     , persistent
     , persistent-postgresql
     , persistent-template
+    , relude
     , safe
     , servant
     , servant-auth
@@ -83,7 +86,9 @@ library
     , yesod-auth
     , yesod-core
     , yesod-form
+    , yesod-persistent
     , yesod-static
+    , yesod-test
   if (flag(dev)) || (flag(library-only))
     ghc-options: -Wall -fwarn-tabs -O0
     cpp-options: -DDEVELOPMENT
@@ -115,6 +120,8 @@ executable yesod-app
     , file-embed
     , foreign-store
     , hjsmin
+    , hspec >=2.0.0
+    , http-client
     , http-conduit
     , jwt
     , monad-control
@@ -122,6 +129,7 @@ executable yesod-app
     , persistent
     , persistent-postgresql
     , persistent-template
+    , relude
     , safe
     , servant
     , servant-auth
@@ -144,7 +152,9 @@ executable yesod-app
     , yesod-auth
     , yesod-core
     , yesod-form
+    , yesod-persistent
     , yesod-static
+    , yesod-test
   if flag(library-only)
     buildable: False
   default-language: Haskell2010
@@ -179,6 +189,7 @@ test-suite test
     , foreign-store
     , hjsmin
     , hspec >=2.0.0
+    , http-client
     , http-conduit
     , jwt
     , monad-control
@@ -186,6 +197,7 @@ test-suite test
     , persistent
     , persistent-postgresql
     , persistent-template
+    , relude
     , safe
     , servant
     , servant-auth
@@ -208,6 +220,7 @@ test-suite test
     , yesod-auth
     , yesod-core
     , yesod-form
+    , yesod-persistent
     , yesod-static
     , yesod-test
   default-language: Haskell2010

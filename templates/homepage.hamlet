@@ -1,4 +1,6 @@
-<div .container>
+<div class=container>
+
+
     <!-- Starting
         ================================================== -->
     <div .bs-docs-section>
@@ -46,7 +48,6 @@
     <hr>
 
     <!-- Forms
-        ================================================== -->
     <div .bs-docs-section>
         <div .row>
             <div .col-lg-12>
@@ -64,7 +65,7 @@
                     <form .form-horizontal method=post action=@{HomeR}#forms enctype=#{formEnctype}>
                         ^{formWidget}
 
-                        <button .btn.btn-primary type="submit">
+                        <button class="ui primary button" type="submit">
                             Upload it!
 
 
@@ -76,9 +77,9 @@
 
                     $nothing
                         File upload result will be here...
-
-
     <hr>
+    ================================================== -->
+
 
     <!-- JSON
         ================================================== -->
@@ -102,8 +103,7 @@
                         <div .field>
                             <textarea rows="2" ##{commentTextareaId} placeholder="Your comment here..." required></textarea>
 
-                        <button .btn.btn-primary type=submit>
-                           Create comment
+                        <button class="ui secondary button" type=submit>Create comment
 
            <div .col-lg-4.col-lg-offset-1>
                <div .bs-callout.bs-callout-info>
@@ -117,7 +117,6 @@
     <hr>
 
     <!-- Testing
-       ================================================== -->
     <div .bs-docs-section>
        <div .row>
            <div .col-lg-12>
@@ -129,3 +128,4 @@
                        test suite that performs tests on this page.
                    <p>
                        You can run your tests by doing: <code>stack test</code>
+     ================================================== -->

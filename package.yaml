@@ -3,6 +3,7 @@ version: "0.0.0"
 
 dependencies:
 - base
+- relude
 - aeson
 - bytestring
 - case-insensitive
@@ -17,6 +18,7 @@ dependencies:
 - file-embed
 - foreign-store
 - hjsmin
+- http-client
 - http-conduit
 - jwt
 - monad-control
@@ -45,7 +47,10 @@ dependencies:
 - yesod-auth
 - yesod-core
 - yesod-form
+- yesod-persistent
 - yesod-static
+- yesod-test
+- hspec >=2.0.0
 
 # The library contains all of our application code. The executable
 # defined below is just a thin wrapper.
@@ -88,8 +93,6 @@ tests:
     ghc-options: -Wall
     dependencies:
     - yesod-app
-    - hspec >=2.0.0
-    - yesod-test
 
 # Define flags used by "yesod devel" to make compilation faster
 flags:

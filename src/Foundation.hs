@@ -8,14 +8,17 @@
 
 module Foundation where
 
-import           Data.Aeson           (Result (Success), fromJSON)
+import Import.NoFoundation
+
+import Auth.JWT as JWT
+import Data.Aeson (Result(Success), fromJSON)
 import qualified Data.CaseInsensitive as CI
 import qualified Data.Text.Encoding as TE
 
 import Database.Persist.Sql (ConnectionPool, runSqlPool)
 
-import Auth.JWT as JWT
-import Import.NoFoundation
+import Network.Wai (Application)
+import Network.HTTP.Client (Manager, newManager)
 
 import Text.Hamlet (hamletFile)
 import Text.Jasmine (minifym)
@@ -132,6 +135,7 @@ instance Yesod App where
     -- value passed to hamletToRepHtml cannot be a widget, this allows
     -- you to use normal widget features in default-layout.
     pc <- widgetToPageContent $ do
+      -- See StaticFiles.hs
       addStylesheet $ StaticR css_bootstrap_css
       $(widgetFile "default-layout")
     withUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
@@ -147,7 +151,6 @@ instance Yesod App where
   isAuthorized RobotsR _ = return Authorized
   isAuthorized (StaticR _) _ = return Authorized
   isAuthorized (ServantR _) _ = return Authorized
-
   isAuthorized ProfileR _ = isAuthenticated
 
   -- This function creates static content files in the static folder
@@ -220,6 +223,7 @@ instance YesodAuth App where
   -- You can add other plugins like Google Email, email or OAuth here
   authPlugins app = [authOpenId Claimed []] ++ extraAuthPlugins
     -- Enable authDummy login if enabled.
+
       where
         extraAuthPlugins = [authDummy | appAuthDummyLogin $ appSettings app]
 
@@ -228,7 +232,6 @@ instance YesodAuth App where
     case mToken of
       Just token -> liftHandler $ tokenToUserId token
       Nothing    -> defaultMaybeAuthId
-
 
 -- | Access function to determine if a user is logged in.
 isAuthenticated :: Handler AuthResult
@@ -264,12 +267,11 @@ instance RenderMessage App FormMessage where
 -- Useful when writing code that is re-usable outside of the Handler context.
 -- An example is background jobs that send email.
 -- This can also be useful for writing code that works across multiple Yesod applications.
-instance HasHttpManager App where
-  getHttpManager = appHttpManager
+-- instance HasHttpManager App where
+--   getHttpManager = appHttpManager
 
 unsafeHandler :: App -> Handler a -> IO a
 unsafeHandler = Unsafe.fakeHandlerGetLogger appLogger
-
 -- Note: Some functionality previously present in the scaffolding has been
 -- moved to documentation in the Wiki. Following are some hopefully helpful
 -- links:
