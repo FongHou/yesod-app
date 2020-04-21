@@ -4,9 +4,11 @@
 module Auth.JWT (lookupToken, jsonToToken, tokenToJson) where
 
 import Import.NoFoundation
+
 import Data.Char (isSpace)
-import Data.Text (toLower)
 import Data.Map as Map (fromList, (!?))
+import qualified Data.Text as T
+
 import Web.JWT as JWT
 
 -- | Try to lookup token from the Authorization header
@@ -32,7 +34,7 @@ jwtKey = "jwt"
 
 extractToken :: Text -> Maybe Text
 extractToken auth
-  | toLower (toText x) == "token" = Just $ toText $ dropWhile isSpace y
+  | T.toLower scheme == "bearer" = Just $ T.dropWhile isSpace token
   | otherwise = Nothing
   where
-    (x, y) = break isSpace (toString auth)
+    (scheme, token) = T.break isSpace auth

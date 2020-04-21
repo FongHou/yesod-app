@@ -1,56 +1,62 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE ViewPatterns #-}
-
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Application
-    ( appMain
-    , makeFoundation
-    , makeLogWare
-      -- * for DevelMain
-    , getApplicationRepl
-    , shutdownApp
-      -- * for GHCI
-    , handler
-    , db
-    ) where
+  ( appMain,
+    makeFoundation,
+    makeLogWare,
 
-import Api
+    -- * for DevelMain
+    getApplicationRepl,
+    shutdownApp,
 
+    -- * for GHCI
+    handler,
+    db,
+  )
+where
+
+import Api (Config (..), app)
 import Control.Monad.Logger (liftLoc, runLoggingT)
-
-import Database.Persist.Postgresql
-       (createPostgresqlPool, pgConnStr, pgPoolSize)
-
+import Database.Persist.Postgresql (createPostgresqlPool, pgConnStr, pgPoolSize)
 import Handler.Comment
 -- Import all relevant handler modules here.
 -- Don't forget to add new modules to your cabal file!
 import Handler.Common
 import Handler.Home
 import Handler.Profile
-
-import Import hiding (Proxy(..))
-
+import Import hiding (Proxy (..))
 import Language.Haskell.TH.Syntax (qLocation)
-
 import Network.HTTP.Client.Conduit (newManager)
 import Network.Wai (Middleware)
 import Network.Wai.Handler.Warp
-       (Settings, defaultSettings, defaultShouldDisplayException, getPort
-      , runSettings, setHost, setOnException, setPort)
+  ( Settings,
+    defaultSettings,
+    defaultShouldDisplayException,
+    getPort,
+    runSettings,
+    setHost,
+    setOnException,
+    setPort,
+  )
 import Network.Wai.Middleware.RequestLogger
-       (Destination(Logger), IPAddrSource(..), OutputFormat(..), destination
-      , mkRequestLogger, outputFormat)
-
+  ( Destination (Logger),
+    IPAddrSource (..),
+    OutputFormat (..),
+    destination,
+    mkRequestLogger,
+    outputFormat,
+  )
 import System.Log.FastLogger (defaultBufSize, newStdoutLoggerSet, toLogStr)
+import Yesod.Core.Types (loggerSet)
 
 -- This line actually creates our YesodDispatch instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see the
@@ -70,14 +76,14 @@ makeFoundation appSettings = do
   appStatic <- (if appMutableStatic appSettings
                 then staticDevel
                 else static) (appStaticDir appSettings)
-  let appApi = Api.app
   -- We need a log function to create a connection pool. We need a connection
   -- pool to create our foundation. And we need our foundation to get a
   -- logging function. To get out of this loop, we initially create a
   -- temporary foundation without a real connection pool, get a log function
   -- from there, and then create the real foundation.
-  let mkFoundation appConnPool = App{ .. }
-      tempFoundation = mkFoundation $ error "connPool forced in tempFoundation"
+  let mkFoundation appConnPool = let appApi = Api.app Config{ .. }
+                                 in App{ .. }
+  let tempFoundation = mkFoundation $ error "connPool forced in tempFoundation"
       logFunc = messageLoggerSource tempFoundation appLogger
   -- Create the database connection pool
   pool <- flip runLoggingT logFunc
@@ -99,26 +105,37 @@ makeApplication foundation = do
 
 makeLogWare :: App -> IO Middleware
 makeLogWare foundation =
-  mkRequestLogger def{ outputFormat =
-                         if appDetailedRequestLogging $ appSettings foundation
-                         then Detailed True
-                         else Apache (if appIpFromHeader $ appSettings foundation
-                                      then FromFallback
-                                      else FromSocket)
-                     , destination  = Logger $ loggerSet $ appLogger foundation }
+  mkRequestLogger
+    def
+      { outputFormat =
+          if appDetailedRequestLogging $ appSettings foundation
+            then Detailed True
+            else
+              Apache
+                ( if appIpFromHeader $ appSettings foundation
+                    then FromFallback
+                    else FromSocket
+                ),
+        destination = Logger $ loggerSet $ appLogger foundation
+      }
 
 -- | Warp settings for the given foundation value.
 warpSettings :: App -> Settings
-warpSettings foundation = setPort (appPort $ appSettings foundation)
-  $ setHost (appHost $ appSettings foundation)
-  $ setOnException (\_req e -> when (defaultShouldDisplayException e)
-                    $ messageLoggerSource foundation
-                                          (appLogger foundation)
-                                          $(qLocation >>= liftLoc)
-                                          "yesod"
-                                          LevelError
-                                          (toLogStr $ "Exception from Warp: " ++ show e))
-                   defaultSettings
+warpSettings foundation =
+  setPort (appPort $ appSettings foundation)
+    $ setHost (appHost $ appSettings foundation)
+    $ setOnException
+      ( \_req e ->
+          when (defaultShouldDisplayException e) $
+            messageLoggerSource
+              foundation
+              (appLogger foundation)
+              $(qLocation >>= liftLoc)
+              "yesod"
+              LevelError
+              (toLogStr $ "Exception from Warp " ++ show e)
+      )
+      defaultSettings
 
 getAppSettings :: IO AppSettings
 getAppSettings = loadYamlSettings [configSettingsYml] [] useEnv
@@ -131,9 +148,9 @@ appMain = do
   -- Generate the foundation from the settings
   foundation <- makeFoundation settings
   -- Generate a WAI Application from the foundation
-  yesod <- makeApplication foundation
+  wai <- makeApplication foundation
   -- Run the application with Warp
-  runSettings (warpSettings foundation) yesod
+  runSettings (warpSettings foundation) wai
 
 --------------------------------------------------------------
 -- Functions for DevelMain.hs (a way to run the app from GHCi)
@@ -152,6 +169,7 @@ shutdownApp _ = return ()
 ---------------------------------------------
 -- Functions for use in development with GHCi
 ---------------------------------------------
+
 -- | Run a handler
 handler :: Handler a -> IO a
 handler h = getAppSettings >>= makeFoundation >>= flip unsafeHandler h

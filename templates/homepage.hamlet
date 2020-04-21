@@ -48,6 +48,7 @@
     <hr>
 
     <!-- Forms
+        ================================================== -->
     <div .bs-docs-section>
         <div .row>
             <div .col-lg-12>
@@ -78,7 +79,6 @@
                     $nothing
                         File upload result will be here...
     <hr>
-    ================================================== -->
 
 
     <!-- JSON

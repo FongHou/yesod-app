@@ -14,15 +14,20 @@ dependencies:
 - containers
 - data-default
 - directory
+- email-validate
 - fast-logger
 - file-embed
 - foreign-store
+- forma
 - hjsmin
 - http-client
 - http-conduit
 - jwt
 - monad-control
 - monad-logger
+- mtl
+- optics
+- generic-optics
 - persistent
 - persistent-postgresql
 - persistent-template
@@ -30,12 +35,12 @@ dependencies:
 - servant
 - servant-auth
 - servant-auth-server
-- servant-rawm
 - servant-server
 - shakespeare
 - template-haskell
 - text
 - time
+- transformers
 - unordered-containers
 - vector
 - wai
@@ -51,6 +56,46 @@ dependencies:
 - yesod-static
 - yesod-test
 - hspec >=2.0.0
+
+default-extensions:
+- BangPatterns
+- BinaryLiterals
+- BlockArguments
+- ConstraintKinds
+- DataKinds
+- DefaultSignatures
+- DeriveDataTypeable
+- DeriveFoldable
+- DeriveFunctor
+- DeriveGeneric
+- DeriveTraversable
+- EmptyCase
+- EmptyDataDecls
+- ExistentialQuantification
+- FlexibleContexts
+- FlexibleInstances
+- FunctionalDependencies
+- GADTs
+- GeneralizedNewtypeDeriving
+- InstanceSigs
+- KindSignatures
+- LambdaCase
+- MultiParamTypeClasses
+- MultiWayIf
+- NamedFieldPuns
+- OverloadedStrings
+- PartialTypeSignatures
+- PatternSynonyms
+- PolyKinds
+- RankNTypes
+- RecordWildCards
+- ScopedTypeVariables
+- StandaloneDeriving
+- TupleSections
+- TypeApplications
+- TypeFamilies
+- TypeOperators
+- ViewPatterns
 
 # The library contains all of our application code. The executable
 # defined below is just a thin wrapper.

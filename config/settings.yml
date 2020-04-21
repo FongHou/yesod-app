@@ -5,7 +5,6 @@ static-dir:     "_env:STATIC_DIR:static"
 host:           "_env:HOST:*4" # any IPv4 host
 port:           "_env:PORT:3000"
 ip-from-header: "_env:IP_FROM_HEADER:false"
-jwt-secret:     "_env:JWT_SECRET:supersecret"
 cors-origin-whitelist: ["_env:CORS_ORIGIN:http://localhost:8080"]
 
 # Default behavior: determine the application root from the request headers.

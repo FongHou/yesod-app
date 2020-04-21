@@ -1,31 +1,22 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
 module Foundation where
 
-import Import.NoFoundation
-
-import Auth.JWT as JWT
-import Data.Aeson (Result(Success), fromJSON)
 import qualified Data.CaseInsensitive as CI
 import qualified Data.Text.Encoding as TE
-
-import Database.Persist.Sql (ConnectionPool, runSqlPool)
-
-import Network.Wai (Application)
-import Network.HTTP.Client (Manager, newManager)
-
+import Import.NoFoundation
+import Network.HTTP.Client (Manager)
 import Text.Hamlet (hamletFile)
 import Text.Jasmine (minifym)
-
 -- Used only when in "auth-dummy-login" setting is enabled.
 import Yesod.Auth.Dummy
-import Yesod.Auth.OpenId (IdentifierType(Claimed), authOpenId)
+import Yesod.Auth.OpenId (IdentifierType (Claimed), authOpenId)
 import Yesod.Core.Types (Logger)
 import qualified Yesod.Core.Unsafe as Unsafe
 import Yesod.Default.Util (addStaticContentExternal)
@@ -34,18 +25,25 @@ import Yesod.Default.Util (addStaticContentExternal)
 -- keep settings and values requiring initialization before your application
 -- starts running, such as database connections. Every handler will have
 -- access to the data present here.
-data App = App{ appSettings    :: AppSettings
-              , appStatic      :: Static -- ^ Settings for static file serving.
-              , appApi         :: Application -- Servant API
-              , appConnPool    :: ConnectionPool -- ^ Database connection pool.
-              , appHttpManager :: Manager
-              , appLogger      :: Logger
-              }
+data App
+  = App
+      { appSettings :: AppSettings,
+        -- | Settings for static file serving.
+        appStatic :: Static,
+        -- | Servant API
+        appApi :: Application,
+        -- | Database connection pool.
+        appConnPool :: ConnectionPool,
+        appHttpManager :: Manager,
+        appLogger :: Logger
+      } deriving (Generic)
 
-data MenuItem = MenuItem{ menuItemLabel          :: Text
-                        , menuItemRoute          :: Route App
-                        , menuItemAccessCallback :: Bool
-                        }
+data MenuItem
+  = MenuItem
+      { menuItemLabel :: Text,
+        menuItemRoute :: Route App,
+        menuItemAccessCallback :: Bool
+      }
 
 data MenuTypes
   = NavbarLeft MenuItem
@@ -81,7 +79,7 @@ instance Yesod App where
   -- see: https://github.com/yesodweb/yesod/wiki/Overriding-approot
   -- approot = ApprootRelative
   approot = ApprootRequest $ \app req -> case appRoot $ appSettings app of
-    Nothing   -> getApprootText guessApproot app req
+    Nothing -> getApprootText guessApproot app req
     Just root -> root
 
   -- Store session data on the client in encrypted cookies,
@@ -107,22 +105,31 @@ instance Yesod App where
     (title, parents) <- breadcrumbs
     -- Define the menu items of the header.
     let menuItems =
-          [ NavbarLeft
-              $ MenuItem{ menuItemLabel          = "Home"
-                        , menuItemRoute          = HomeR
-                        , menuItemAccessCallback = True }
-          , NavbarLeft
-              $ MenuItem{ menuItemLabel          = "Profile"
-                        , menuItemRoute          = ProfileR
-                        , menuItemAccessCallback = isJust muser }
-          , NavbarRight
-              $ MenuItem{ menuItemLabel          = "Login"
-                        , menuItemRoute          = AuthR LoginR
-                        , menuItemAccessCallback = isNothing muser }
-          , NavbarRight
-              $ MenuItem{ menuItemLabel          = "Logout"
-                        , menuItemRoute          = AuthR LogoutR
-                        , menuItemAccessCallback = isJust muser }]
+          [ NavbarLeft $
+              MenuItem
+                { menuItemLabel = "Home",
+                  menuItemRoute = HomeR,
+                  menuItemAccessCallback = True
+                },
+            NavbarLeft $
+              MenuItem
+                { menuItemLabel = "Profile",
+                  menuItemRoute = ProfileR,
+                  menuItemAccessCallback = isJust muser
+                },
+            NavbarRight $
+              MenuItem
+                { menuItemLabel = "Login",
+                  menuItemRoute = AuthR LoginR,
+                  menuItemAccessCallback = isNothing muser
+                },
+            NavbarRight $
+              MenuItem
+                { menuItemLabel = "Logout",
+                  menuItemRoute = AuthR LogoutR,
+                  menuItemAccessCallback = isJust muser
+                }
+          ]
     let navbarLeftMenuItems = [x | NavbarLeft x <- menuItems]
     let navbarRightMenuItems = [x | NavbarRight x <- menuItems]
     let navbarLeftFilteredMenuItems =
@@ -136,7 +143,7 @@ instance Yesod App where
     -- you to use normal widget features in default-layout.
     pc <- widgetToPageContent $ do
       -- See StaticFiles.hs
-      addStylesheet $ StaticR css_bootstrap_css
+      -- addStylesheet $ StaticR css_bootstrap_css
       $(widgetFile "default-layout")
     withUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
 
@@ -145,12 +152,13 @@ instance Yesod App where
 
   -- Routes not requiring authentication.
   isAuthorized (AuthR _) _ = return Authorized
-  isAuthorized CommentR _ = return Authorized
   isAuthorized HomeR _ = return Authorized
   isAuthorized FaviconR _ = return Authorized
   isAuthorized RobotsR _ = return Authorized
   isAuthorized (StaticR _) _ = return Authorized
   isAuthorized (ServantR _) _ = return Authorized
+
+  -- Routes requiring authentication.
   isAuthorized ProfileR _ = isAuthenticated
 
   -- This function creates static content files in the static folder
@@ -160,24 +168,25 @@ instance Yesod App where
   addStaticContent ext mime content = do
     master <- getYesod
     let staticDir = appStaticDir $ appSettings master
-    addStaticContentExternal minifym
-                             genFileName
-                             staticDir
-                             (StaticR . flip StaticRoute [])
-                             ext
-                             mime
-                             content
-    -- Generate a unique filename based on the content itself
-
-      where
-        genFileName lbs = "autogen-" ++ base64md5 lbs
+    addStaticContentExternal
+      minifym
+      genFileName
+      staticDir
+      (StaticR . flip StaticRoute [])
+      ext
+      mime
+      content
+    where
+      -- Generate a unique filename based on the content itself
+      genFileName lbs = "autogen-" ++ base64md5 lbs
 
   -- What messages should be logged. The following includes all messages when
   -- in development, and warnings and errors in production.
-  shouldLogIO app _source level = return
-    $ appShouldLogAll (appSettings app)
-    || level == LevelWarn
-    || level == LevelError
+  shouldLogIO app _source level =
+    return $
+      appShouldLogAll (appSettings app)
+        || level == LevelWarn
+        || level == LevelError
 
   makeLogger = return . appLogger
 
@@ -212,26 +221,13 @@ instance YesodAuth App where
   redirectToReferer _ = True
 
   -- authenticate _creds = throwString "Not Authenticated"
-  authenticate creds = liftHandler $ runDB $ do
-    x <- getBy $ UniqueUser $ credsIdent creds
-    case x of
-      Just (Entity uid _) -> return $ Authenticated uid
-      Nothing -> Authenticated
-        <$> insert User{ userIdent    = credsIdent creds
-                       , userPassword = Nothing }
+  authenticate _creds = error "authenticate"
 
   -- You can add other plugins like Google Email, email or OAuth here
   authPlugins app = [authOpenId Claimed []] ++ extraAuthPlugins
-    -- Enable authDummy login if enabled.
-
-      where
-        extraAuthPlugins = [authDummy | appAuthDummyLogin $ appSettings app]
-
-  maybeAuthId = do
-    mToken <- JWT.lookupToken
-    case mToken of
-      Just token -> liftHandler $ tokenToUserId token
-      Nothing    -> defaultMaybeAuthId
+    where
+      -- Enable authDummy login if enabled.
+      extraAuthPlugins = [authDummy | appAuthDummyLogin $ appSettings app]
 
 -- | Access function to determine if a user is logged in.
 isAuthenticated :: Handler AuthResult
@@ -239,23 +235,7 @@ isAuthenticated = do
   muid <- maybeAuthId
   return $ case muid of
     Nothing -> Unauthorized "You must login to access this page"
-    Just _  -> Authorized
-
-userIdToken :: UserId -> Handler Text
-userIdToken userId = do
-  jwtSecret <- getJwtSecret
-  return $ JWT.jsonToToken jwtSecret $ toJSON userId
-
-tokenToUserId :: Text -> Handler (Maybe UserId)
-tokenToUserId token = do
-  jwtSecret <- getJwtSecret
-  let mUserId = fromJSON <$> JWT.tokenToJson jwtSecret token
-  case mUserId of
-    Just (Success userId) -> return $ Just userId
-    _ -> return Nothing
-
-getJwtSecret :: HandlerFor App Text
-getJwtSecret = getsYesod $ appJwtSecret . appSettings
+    Just _ -> Authorized
 
 instance YesodAuthPersist App
 

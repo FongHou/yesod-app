@@ -63,7 +63,6 @@ data AppSettings =
                -- ^ Google Analytics code
              , appAuthDummyLogin :: Bool
                -- ^ Indicate if auth dummy login should be enabled.
-             , appJwtSecret  :: Text
              }
 
 instance FromJSON AppSettings where
@@ -89,7 +88,6 @@ instance FromJSON AppSettings where
     appCopyright <- o .: "copyright"
     appAnalytics <- o .:? "analytics"
     appAuthDummyLogin <- o .:? "auth-dummy-login" .!= dev
-    appJwtSecret <- o .: "jwt-secret"
     return AppSettings{ .. }
 
 -- | Settings for 'widgetFile', such as which template languages to support and

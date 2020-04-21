@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 84f6b8284352bf75ed59bc818162e84d185f700530ddf9c8dc02779f3e6ee2d3
+-- hash: 656c122618b7f4fd9de279de304d007cf7ecb601b43e651664bc92bf1d2661fc
 
 name:           yesod-app
 version:        0.0.0
@@ -25,6 +25,7 @@ library
       Api
       Application
       Auth.JWT
+      Database
       Foundation
       Handler.Comment
       Handler.Common
@@ -33,12 +34,14 @@ library
       Import
       Import.NoFoundation
       Model
+      Model.Types
       Settings
       Settings.StaticFiles
   other-modules:
       Paths_yesod_app
   hs-source-dirs:
       src
+  default-extensions: BangPatterns BinaryLiterals BlockArguments ConstraintKinds DataKinds DefaultSignatures DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable EmptyCase EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings PartialTypeSignatures PatternSynonyms PolyKinds RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators ViewPatterns
   build-depends:
       aeson
     , base
@@ -51,9 +54,12 @@ library
     , containers
     , data-default
     , directory
+    , email-validate
     , fast-logger
     , file-embed
     , foreign-store
+    , forma
+    , generic-optics
     , hjsmin
     , hspec >=2.0.0
     , http-client
@@ -61,6 +67,8 @@ library
     , jwt
     , monad-control
     , monad-logger
+    , mtl
+    , optics
     , persistent
     , persistent-postgresql
     , persistent-template
@@ -69,12 +77,12 @@ library
     , servant
     , servant-auth
     , servant-auth-server
-    , servant-rawm
     , servant-server
     , shakespeare
     , template-haskell
     , text
     , time
+    , transformers
     , unordered-containers
     , vector
     , wai
@@ -103,6 +111,7 @@ executable yesod-app
       Paths_yesod_app
   hs-source-dirs:
       app
+  default-extensions: BangPatterns BinaryLiterals BlockArguments ConstraintKinds DataKinds DefaultSignatures DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable EmptyCase EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings PartialTypeSignatures PatternSynonyms PolyKinds RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators ViewPatterns
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
@@ -116,9 +125,12 @@ executable yesod-app
     , containers
     , data-default
     , directory
+    , email-validate
     , fast-logger
     , file-embed
     , foreign-store
+    , forma
+    , generic-optics
     , hjsmin
     , hspec >=2.0.0
     , http-client
@@ -126,6 +138,8 @@ executable yesod-app
     , jwt
     , monad-control
     , monad-logger
+    , mtl
+    , optics
     , persistent
     , persistent-postgresql
     , persistent-template
@@ -134,12 +148,12 @@ executable yesod-app
     , servant
     , servant-auth
     , servant-auth-server
-    , servant-rawm
     , servant-server
     , shakespeare
     , template-haskell
     , text
     , time
+    , transformers
     , unordered-containers
     , vector
     , wai
@@ -171,6 +185,7 @@ test-suite test
       Paths_yesod_app
   hs-source-dirs:
       test
+  default-extensions: BangPatterns BinaryLiterals BlockArguments ConstraintKinds DataKinds DefaultSignatures DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable EmptyCase EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings PartialTypeSignatures PatternSynonyms PolyKinds RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators ViewPatterns
   ghc-options: -Wall
   build-depends:
       aeson
@@ -184,9 +199,12 @@ test-suite test
     , containers
     , data-default
     , directory
+    , email-validate
     , fast-logger
     , file-embed
     , foreign-store
+    , forma
+    , generic-optics
     , hjsmin
     , hspec >=2.0.0
     , http-client
@@ -194,6 +212,8 @@ test-suite test
     , jwt
     , monad-control
     , monad-logger
+    , mtl
+    , optics
     , persistent
     , persistent-postgresql
     , persistent-template
@@ -202,12 +222,12 @@ test-suite test
     , servant
     , servant-auth
     , servant-auth-server
-    , servant-rawm
     , servant-server
     , shakespeare
     , template-haskell
     , text
     , time
+    , transformers
     , unordered-containers
     , vector
     , wai

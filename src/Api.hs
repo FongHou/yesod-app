@@ -1,31 +1,53 @@
-{-# LANGUAGE TypeOperators, DataKinds, DeriveGeneric #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
-module Api (API, api, app, module Servant) where
+module Api
+  ( Config (..),
+    app,
+  )
+where
 
-import Servant hiding (Handler(..))
+import Import.NoFoundation
+import Network.HTTP.Client (Manager)
+import Servant
 import Servant.API.Generic
 import Servant.Server.Generic
 
-type API = "id" :> ToServantApi Routes :<|> EmptyAPI
+type API = "id" :> ToServantApi TestR :<|> EmptyAPI
 
-data Routes route = Routes
-    { _get :: route :- Capture "id" Int :> Get '[JSON] String
-    , _put :: route :- ReqBody '[JSON] Int :> Put '[JSON] Bool
-    }
+data TestR route
+  = Routes
+      { _get :: route :- Capture "id" Int :> Get '[JSON] String,
+        _put :: route :- ReqBody '[JSON] Int :> Put '[JSON] Bool
+      }
   deriving (Generic)
 
-api :: Proxy API
-api = Proxy
+data UserR route
+  = UserR
+      { getUser :: route :- Capture "userid" UserId :> Get '[JSON] User,
+        putUser :: route :- Capture "userid" UserId :> ReqBody '[JSON] User :> Put '[JSON] User,
+        registerUser :: route :- ReqBody '[JSON] User :> Post '[JSON] UserId
+      }
 
-app :: Application
-app = serve api server
+data Config
+  = Config
+      { appConnPool :: ConnectionPool,
+        appHttpManager :: Manager
+      }
+  deriving (Generic)
 
-server :: Server API
-server = genericServerT routes :<|> emptyServer
+app :: Config -> Application
+app config = serve api $ hoistServer api (usingReaderT config) server
+  where
+    api = Proxy :: Proxy API
 
-routes :: Routes AsServer
-routes = Routes
-    { _get = return . show
-    , _put = return . odd
+type AppM = ReaderT Config Handler
+
+server :: ServerT API AppM
+server = genericServerT test :<|> emptyServer
+
+test :: TestR (AsServerT AppM)
+test =
+  Routes
+    { _get = return . show,
+      _put = return . odd
     }
-
