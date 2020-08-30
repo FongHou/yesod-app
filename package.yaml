@@ -5,6 +5,8 @@ dependencies:
 - base
 - relude
 - aeson
+- aeson-optics
+- aeson-schemas
 - bytestring
 - case-insensitive
 - classy-prelude
@@ -15,7 +17,9 @@ dependencies:
 - data-default
 - directory
 - email-validate
+- safe-exceptions
 - fast-logger
+- fb
 - file-embed
 - foreign-store
 - forma
@@ -28,13 +32,14 @@ dependencies:
 - mtl
 - optics
 - generic-optics
+- esqueleto
+- hasql
+- hasql-th
 - persistent
 - persistent-postgresql
 - persistent-template
 - safe
 - servant
-- servant-auth
-- servant-auth-server
 - servant-server
 - shakespeare
 - template-haskell
@@ -49,8 +54,10 @@ dependencies:
 - warp
 - yaml
 - yesod
-- yesod-auth
 - yesod-core
+- yesod-auth
+- yesod-auth-fb
+- yesod-fb
 - yesod-form
 - yesod-persistent
 - yesod-static
@@ -59,16 +66,18 @@ dependencies:
 
 default-extensions:
 - BangPatterns
-- BinaryLiterals
 - BlockArguments
 - ConstraintKinds
 - DataKinds
 - DefaultSignatures
+- DeriveAnyClass
 - DeriveDataTypeable
 - DeriveFoldable
 - DeriveFunctor
 - DeriveGeneric
 - DeriveTraversable
+- DerivingStrategies
+- DerivingVia
 - EmptyCase
 - EmptyDataDecls
 - ExistentialQuantification
@@ -96,6 +105,10 @@ default-extensions:
 - TypeFamilies
 - TypeOperators
 - ViewPatterns
+
+ghc-options:
+- -fwrite-ide-info
+- -hiedir=.hie/
 
 # The library contains all of our application code. The executable
 # defined below is just a thin wrapper.

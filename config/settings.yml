@@ -5,11 +5,11 @@ static-dir:     "_env:STATIC_DIR:static"
 host:           "_env:HOST:*4" # any IPv4 host
 port:           "_env:PORT:3000"
 ip-from-header: "_env:IP_FROM_HEADER:false"
-cors-origin-whitelist: ["_env:CORS_ORIGIN:http://localhost:8080"]
+cors-origin-whitelist: ["_env:CORS_ORIGIN:http://localhost:9630"]
 
 # Default behavior: determine the application root from the request headers.
 # Uncomment to set an explicit approot
-# approot:        "_env:APPROOT:http://localhost:3000/yesod"
+approot:        "_env:APPROOT:http://localhost:3000"
 
 # By default, `yesod devel` runs in development, and built executables use
 # production settings (see below). To override this, use the following:
@@ -21,8 +21,8 @@ cors-origin-whitelist: ["_env:CORS_ORIGIN:http://localhost:8080"]
 #
 # detailed-logging: false
 # should-log-all: false
-# reload-templates: true
-# mutable-static: true
+reload-templates: true
+# mutable-static: false
 # skip-combining: false
 # auth-dummy-login : false
 

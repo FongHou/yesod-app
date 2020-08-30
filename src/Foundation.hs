@@ -1,5 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -10,74 +11,68 @@ module Foundation where
 
 import qualified Data.CaseInsensitive as CI
 import qualified Data.Text.Encoding as TE
+import Facebook (Credentials (..))
 import Import.NoFoundation
-import Network.HTTP.Client (Manager)
+import Network.HTTP.Client (HasHttpManager (..), Manager)
 import Text.Hamlet (hamletFile)
 import Text.Jasmine (minifym)
--- Used only when in "auth-dummy-login" setting is enabled.
-import Yesod.Auth.Dummy
-import Yesod.Auth.OpenId (IdentifierType (Claimed), authOpenId)
+import Yesod.Auth.Dummy (authDummy)
+import Yesod.Auth.Facebook.ServerSide
+import qualified Yesod.Auth.Message as Msg
 import Yesod.Core.Types (Logger)
 import qualified Yesod.Core.Unsafe as Unsafe
 import Yesod.Default.Util (addStaticContentExternal)
+import Yesod.Facebook
+
+mkYesodData
+  "App"
+  [parseRoutes| -- $(parseRoutesFile "config/routes")
+
+/static StaticR   Static      appStatic
+/auth   AuthR     Auth        getAuth
+/api    ServantR  WaiSubsiteWithAuth  getServant
+
+/favicon.ico FaviconR GET
+/robots.txt RobotsR GET
+
+/ HomeR GET
+
+/profile ProfileR GET
+
+  |]
 
 -- | The foundation datatype for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
 -- starts running, such as database connections. Every handler will have
 -- access to the data present here.
-data App
-  = App
-      { appSettings :: AppSettings,
-        -- | Settings for static file serving.
-        appStatic :: Static,
-        -- | Servant API
-        appApi :: Application,
-        -- | Database connection pool.
-        appConnPool :: ConnectionPool,
-        appHttpManager :: Manager,
-        appLogger :: Logger
-      } deriving (Generic)
+data App = App
+  { appSettings :: AppSettings,
+    appStatic :: Static,
+    appApi :: Application,
+    appConnPool :: ConnectionPool,
+    appSecrets :: [(Text, Text)],
+    appHttpManager :: Manager,
+    appLogger :: Logger
+  }
+  deriving (Generic)
 
-data MenuItem
-  = MenuItem
-      { menuItemLabel :: Text,
-        menuItemRoute :: Route App,
-        menuItemAccessCallback :: Bool
-      }
+data MenuItem = MenuItem
+  { menuItemLabel :: Text,
+    menuItemRoute :: Route App,
+    menuItemAccessCallback :: Bool
+  }
 
 data MenuTypes
   = NavbarLeft MenuItem
   | NavbarRight MenuItem
 
--- This is where we define all of the routes in our application. For a full
--- explanation of the syntax, please see:
--- http://www.yesodweb.com/book/routing-and-handlers
---
--- Note that this is really half the story; in Application.hs, mkYesodDispatch
--- generates the rest of the code. Please see the following documentation
--- for an explanation for this split:
--- http://www.yesodweb.com/book/scaffolding-and-the-site-template#scaffolding-and-the-site-template_foundation_and_application_modules
---
--- This function also generates the following type synonyms:
--- type Handler = HandlerT App IO
--- type Widget = WidgetT App IO ()
-mkYesodData "App" $(parseRoutesFile "config/routes")
-
--- | A convenient synonym for creating forms.
-type Form x = Html -> MForm (HandlerFor App) (FormResult x, Widget)
-
 -- | A convenient synonym for database access functions.
 type DB a = forall m. MonadIO m => ReaderT SqlBackend m a
-
-getServant :: App -> WaiSubsiteWithAuth
-getServant = WaiSubsiteWithAuth . appApi
 
 -- Please see the documentation for the Yesod typeclass. There are a number
 -- of settings which can be configured by overriding methods here.
 instance Yesod App where
-  -- Controls the base of generated URLs. For more information on modifying,
-  -- see: https://github.com/yesodweb/yesod/wiki/Overriding-approot
-  -- approot = ApprootRelative
+  -- approot = ApprootStatic "http://localhost:3000"
   approot = ApprootRequest $ \app req -> case appRoot $ appSettings app of
     Nothing -> getApprootText guessApproot app req
     Just root -> root
@@ -98,11 +93,11 @@ instance Yesod App where
 
   defaultLayout widget = do
     master <- getYesod
-    mmsg <- getMessage
     muser <- maybeAuthPair
+    mmsg <- getMessage
     mcurrentRoute <- getCurrentRoute
     -- Get the breadcrumbs, as defined in the YesodBreadcrumbs instance.
-    (title, parents) <- breadcrumbs
+    (_title, _parents) <- breadcrumbs
     -- Define the menu items of the header.
     let menuItems =
           [ NavbarLeft $
@@ -142,8 +137,6 @@ instance Yesod App where
     -- value passed to hamletToRepHtml cannot be a widget, this allows
     -- you to use normal widget features in default-layout.
     pc <- widgetToPageContent $ do
-      -- See StaticFiles.hs
-      -- addStylesheet $ StaticR css_bootstrap_css
       $(widgetFile "default-layout")
     withUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
 
@@ -157,9 +150,8 @@ instance Yesod App where
   isAuthorized RobotsR _ = return Authorized
   isAuthorized (StaticR _) _ = return Authorized
   isAuthorized (ServantR _) _ = return Authorized
-
   -- Routes requiring authentication.
-  isAuthorized ProfileR _ = isAuthenticated
+  isAuthorized ProfileR _ = return Authorized
 
   -- This function creates static content files in the static folder
   -- and names them based on a hash of their content. This allows
@@ -180,8 +172,6 @@ instance Yesod App where
       -- Generate a unique filename based on the content itself
       genFileName lbs = "autogen-" ++ base64md5 lbs
 
-  -- What messages should be logged. The following includes all messages when
-  -- in development, and warnings and errors in production.
   shouldLogIO app _source level =
     return $
       appShouldLogAll (appSettings app)
@@ -208,6 +198,12 @@ instance YesodPersist App where
 instance YesodPersistRunner App where
   getDBRunner = defaultGetDBRunner appConnPool
 
+instance YesodFacebook App where
+  fbCredentials _ =
+    let fbClientId = "fb_client_id"
+        fbClientSecret = "fb_client_secret"
+     in Credentials "yesod" fbClientId fbClientSecret True
+
 instance YesodAuth App where
   type AuthId App = UserId
 
@@ -220,14 +216,17 @@ instance YesodAuth App where
   -- Override the above two destinations when a Referer: header is present
   redirectToReferer _ = True
 
-  -- authenticate _creds = throwString "Not Authenticated"
-  authenticate _creds = error "authenticate"
+  authenticate creds = liftHandler $ do
+    muser <- runDB $ getBy $ UniqueUserUsername (credsIdent creds)
+    case muser of
+      Nothing -> return $ UserError Msg.InvalidLogin
+      Just (Entity uid _) -> return $ Authenticated uid
 
-  -- You can add other plugins like Google Email, email or OAuth here
-  authPlugins app = [authOpenId Claimed []] ++ extraAuthPlugins
+  authPlugins app = [authFacebook ["user_about_me", "email"]] ++ dummyLogin
     where
-      -- Enable authDummy login if enabled.
-      extraAuthPlugins = [authDummy | appAuthDummyLogin $ appSettings app]
+      dummyLogin = [authDummy | appAuthDummyLogin $ appSettings app]
+
+  authHttpManager = appHttpManager <$> getYesod
 
 -- | Access function to determine if a user is logged in.
 isAuthenticated :: Handler AuthResult
@@ -239,23 +238,14 @@ isAuthenticated = do
 
 instance YesodAuthPersist App
 
--- This instance is required to use forms. You can modify renderMessage to
--- achieve customized and internationalized form validation messages.
 instance RenderMessage App FormMessage where
   renderMessage _ _ = defaultFormMessage
 
--- Useful when writing code that is re-usable outside of the Handler context.
--- An example is background jobs that send email.
--- This can also be useful for writing code that works across multiple Yesod applications.
--- instance HasHttpManager App where
---   getHttpManager = appHttpManager
+instance HasHttpManager App where
+  getHttpManager = appHttpManager
+
+getServant :: App -> WaiSubsiteWithAuth
+getServant = WaiSubsiteWithAuth . appApi
 
 unsafeHandler :: App -> Handler a -> IO a
 unsafeHandler = Unsafe.fakeHandlerGetLogger appLogger
--- Note: Some functionality previously present in the scaffolding has been
--- moved to documentation in the Wiki. Following are some hopefully helpful
--- links:
---
--- https://github.com/yesodweb/yesod/wiki/Sending-email
--- https://github.com/yesodweb/yesod/wiki/Serve-static-files-from-a-separate-domain
--- https://github.com/yesodweb/yesod/wiki/i18n-messages-in-the-scaffolding

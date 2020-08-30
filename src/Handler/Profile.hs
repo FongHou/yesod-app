@@ -1,17 +1,14 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeFamilies #-}
 
 module Handler.Profile where
 
 import Import
 
 getProfileR :: Handler Html
-getProfileR = return "ProfileR"
--- getProfileR = do
---   (_, user) <- requireAuthPair
---   defaultLayout $ do
---     setTitle . toHtml $ userIdent user <> "'s User page"
---     $(widgetFile "profile")
+getProfileR= do
+  (Entity _ user) <- requireAuth
+  let username = userUsername user
+  defaultLayout $ do
+    setTitle "User Profile"
+    $(widgetFile "profile")

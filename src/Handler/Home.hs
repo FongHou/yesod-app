@@ -6,8 +6,6 @@
 module Handler.Home where
 
 import Import
-import Yesod.Form.Bootstrap3 (BootstrapFormLayout (..), renderBootstrap3)
-import Text.Julius (RawJS (..))
 
 -- Define our data that will be used for creating the form.
 data FileForm = FileForm
@@ -23,8 +21,8 @@ data FileForm = FileForm
 -- functions. You can spread them across multiple files if you are so
 -- inclined, or create a single monolithic file.
 getHomeR :: Handler Html
-getHomeR = return "HomeR"
-
-postHomeR :: Handler Html
-postHomeR = return "HomeR"
+getHomeR = do
+  defaultLayout $ do
+    setTitle "Welcome To Yesod!"
+    $(widgetFile "homepage")
 

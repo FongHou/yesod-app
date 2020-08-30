@@ -26,9 +26,6 @@ $newline never
     \<!-- Bootstrap-3.3.7 compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous">
 
-    <script crossorigin src="https://unpkg.com/react@16/umd/react.development.js">
-    <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js">
-
     <script>
       /* The `defaultCsrfMiddleware` Middleware added in Foundation.hs adds a CSRF token to the request cookies. */
       /* AJAX requests should add that token to a header to be validated by the server. */
@@ -52,8 +49,10 @@ $newline never
   <body>
     ^{pageBody pc}
 
-    <div id="app" class="ui label">
-    <script src="/static/js/app/main.js" type="text/javascript">
+    <script crossorigin src="https://unpkg.com/react@16/umd/react.development.js">
+    <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js">
+    <script src="/static/js/shared.js" type="text/javascript">
+    <script src="/static/js/main.js" type="text/javascript">
     <script>
       window.onload=function(){ cljapp.core.main(); };
 

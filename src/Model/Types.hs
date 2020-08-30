@@ -11,7 +11,8 @@ import Relude
 import qualified Text.Email.Validate as Email
 import qualified Yesod.Auth.Util.PasswordStore as PS
 
-newtype Password = Password Text deriving (Show, Eq, ToJSON, FromJSON)
+newtype Password = Password Text
+  deriving newtype (Show, Eq, ToJSON, FromJSON)
 
 mkPassword :: MonadIO m => Text -> m Password
 mkPassword text = Password . decodeUtf8 <$> liftIO (PS.makePassword (encodeUtf8 text) 14)

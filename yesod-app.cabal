@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.31.2.
+-- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 656c122618b7f4fd9de279de304d007cf7ecb601b43e651664bc92bf1d2661fc
+-- hash: 01ca8bce4fe79d05f42cc3a372dc6420fe59745291128debf6e50bc8ad9171d2
 
 name:           yesod-app
 version:        0.0.0
@@ -23,6 +23,9 @@ flag library-only
 library
   exposed-modules:
       Api
+      Api.Config
+      Api.User
+      Api.Util
       Application
       Auth.JWT
       Database
@@ -41,9 +44,12 @@ library
       Paths_yesod_app
   hs-source-dirs:
       src
-  default-extensions: BangPatterns BinaryLiterals BlockArguments ConstraintKinds DataKinds DefaultSignatures DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable EmptyCase EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings PartialTypeSignatures PatternSynonyms PolyKinds RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators ViewPatterns
+  default-extensions: BangPatterns BlockArguments ConstraintKinds DataKinds DefaultSignatures DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia EmptyCase EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings PartialTypeSignatures PatternSynonyms PolyKinds RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators ViewPatterns
+  ghc-options: -fwrite-ide-info -hiedir=.hie/
   build-depends:
       aeson
+    , aeson-optics
+    , aeson-schemas
     , base
     , bytestring
     , case-insensitive
@@ -55,11 +61,15 @@ library
     , data-default
     , directory
     , email-validate
+    , esqueleto
     , fast-logger
+    , fb
     , file-embed
     , foreign-store
     , forma
     , generic-optics
+    , hasql
+    , hasql-th
     , hjsmin
     , hspec >=2.0.0
     , http-client
@@ -74,9 +84,8 @@ library
     , persistent-template
     , relude
     , safe
+    , safe-exceptions
     , servant
-    , servant-auth
-    , servant-auth-server
     , servant-server
     , shakespeare
     , template-haskell
@@ -92,7 +101,9 @@ library
     , yaml
     , yesod
     , yesod-auth
+    , yesod-auth-fb
     , yesod-core
+    , yesod-fb
     , yesod-form
     , yesod-persistent
     , yesod-static
@@ -111,10 +122,12 @@ executable yesod-app
       Paths_yesod_app
   hs-source-dirs:
       app
-  default-extensions: BangPatterns BinaryLiterals BlockArguments ConstraintKinds DataKinds DefaultSignatures DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable EmptyCase EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings PartialTypeSignatures PatternSynonyms PolyKinds RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators ViewPatterns
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  default-extensions: BangPatterns BlockArguments ConstraintKinds DataKinds DefaultSignatures DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia EmptyCase EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings PartialTypeSignatures PatternSynonyms PolyKinds RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators ViewPatterns
+  ghc-options: -fwrite-ide-info -hiedir=.hie/ -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
+    , aeson-optics
+    , aeson-schemas
     , base
     , bytestring
     , case-insensitive
@@ -126,11 +139,15 @@ executable yesod-app
     , data-default
     , directory
     , email-validate
+    , esqueleto
     , fast-logger
+    , fb
     , file-embed
     , foreign-store
     , forma
     , generic-optics
+    , hasql
+    , hasql-th
     , hjsmin
     , hspec >=2.0.0
     , http-client
@@ -145,9 +162,8 @@ executable yesod-app
     , persistent-template
     , relude
     , safe
+    , safe-exceptions
     , servant
-    , servant-auth
-    , servant-auth-server
     , servant-server
     , shakespeare
     , template-haskell
@@ -164,7 +180,9 @@ executable yesod-app
     , yesod
     , yesod-app
     , yesod-auth
+    , yesod-auth-fb
     , yesod-core
+    , yesod-fb
     , yesod-form
     , yesod-persistent
     , yesod-static
@@ -185,10 +203,12 @@ test-suite test
       Paths_yesod_app
   hs-source-dirs:
       test
-  default-extensions: BangPatterns BinaryLiterals BlockArguments ConstraintKinds DataKinds DefaultSignatures DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable EmptyCase EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings PartialTypeSignatures PatternSynonyms PolyKinds RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators ViewPatterns
-  ghc-options: -Wall
+  default-extensions: BangPatterns BlockArguments ConstraintKinds DataKinds DefaultSignatures DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DerivingVia EmptyCase EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings PartialTypeSignatures PatternSynonyms PolyKinds RankNTypes RecordWildCards ScopedTypeVariables StandaloneDeriving TupleSections TypeApplications TypeFamilies TypeOperators ViewPatterns
+  ghc-options: -fwrite-ide-info -hiedir=.hie/ -Wall
   build-depends:
       aeson
+    , aeson-optics
+    , aeson-schemas
     , base
     , bytestring
     , case-insensitive
@@ -200,11 +220,15 @@ test-suite test
     , data-default
     , directory
     , email-validate
+    , esqueleto
     , fast-logger
+    , fb
     , file-embed
     , foreign-store
     , forma
     , generic-optics
+    , hasql
+    , hasql-th
     , hjsmin
     , hspec >=2.0.0
     , http-client
@@ -219,9 +243,8 @@ test-suite test
     , persistent-template
     , relude
     , safe
+    , safe-exceptions
     , servant
-    , servant-auth
-    , servant-auth-server
     , servant-server
     , shakespeare
     , template-haskell
@@ -238,7 +261,9 @@ test-suite test
     , yesod
     , yesod-app
     , yesod-auth
+    , yesod-auth-fb
     , yesod-core
+    , yesod-fb
     , yesod-form
     , yesod-persistent
     , yesod-static

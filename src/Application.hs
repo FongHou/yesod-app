@@ -27,7 +27,6 @@ where
 import Api (Config (..), app)
 import Control.Monad.Logger (liftLoc, runLoggingT)
 import Database.Persist.Postgresql (createPostgresqlPool, pgConnStr, pgPoolSize)
-import Handler.Comment
 -- Import all relevant handler modules here.
 -- Don't forget to add new modules to your cabal file!
 import Handler.Common
@@ -35,7 +34,7 @@ import Handler.Home
 import Handler.Profile
 import Import hiding (Proxy (..))
 import Language.Haskell.TH.Syntax (qLocation)
-import Network.HTTP.Client.Conduit (newManager)
+import Network.HTTP.Conduit (newManager, tlsManagerSettings)
 import Network.Wai (Middleware)
 import Network.Wai.Handler.Warp
   ( Settings,
@@ -55,6 +54,7 @@ import Network.Wai.Middleware.RequestLogger
     mkRequestLogger,
     outputFormat,
   )
+import System.Environment
 import System.Log.FastLogger (defaultBufSize, newStdoutLoggerSet, toLogStr)
 import Yesod.Core.Types (loggerSet)
 
@@ -71,28 +71,40 @@ makeFoundation :: AppSettings -> IO App
 makeFoundation appSettings = do
   -- Some basic initializations: HTTP connection manager, logger, and static
   -- subsite.
-  appHttpManager <- newManager
+  appHttpManager <- newManager tlsManagerSettings
   appLogger <- newStdoutLoggerSet defaultBufSize >>= makeYesodLogger
-  appStatic <- (if appMutableStatic appSettings
-                then staticDevel
-                else static) (appStaticDir appSettings)
+  appStatic <-
+    ( if appMutableStatic appSettings
+        then staticDevel
+        else static
+      )
+      (appStaticDir appSettings)
+  appSecrets <- sequence [getSecret "FB"]
   -- We need a log function to create a connection pool. We need a connection
   -- pool to create our foundation. And we need our foundation to get a
   -- logging function. To get out of this loop, we initially create a
   -- temporary foundation without a real connection pool, get a log function
   -- from there, and then create the real foundation.
-  let mkFoundation appConnPool = let appApi = Api.app Config{ .. }
-                                 in App{ .. }
+  let mkFoundation appConnPool =
+        let appApi = Api.app Config {..}
+         in App {..}
   let tempFoundation = mkFoundation $ error "connPool forced in tempFoundation"
       logFunc = messageLoggerSource tempFoundation appLogger
   -- Create the database connection pool
-  pool <- flip runLoggingT logFunc
-    $ createPostgresqlPool (pgConnStr $ appDatabaseConf appSettings)
-                           (pgPoolSize $ appDatabaseConf appSettings)
+  pool <-
+    flip runLoggingT logFunc $
+      createPostgresqlPool
+        (pgConnStr $ appDatabaseConf appSettings)
+        (pgPoolSize $ appDatabaseConf appSettings)
   -- Perform database migration using our application's logging settings.
-  runLoggingT (runSqlPool (runMigration migrateAll) pool) logFunc
+  -- runLoggingT (runSqlPool (runMigration migrateAll) pool) logFunc
   -- Return the foundation
   return $ mkFoundation pool
+  where
+    getSecret prefix = do
+      cliendId <- getEnv $ prefix <> "_CLIENT_ID"
+      clientSecret <- getEnv $ prefix <> "_CLIENT_SECRET"
+      pure (toText cliendId, toText clientSecret)
 
 -- | Convert our foundation to a WAI Application by calling @toWaiAppPlain@ and
 -- applying some additional middlewares.
@@ -105,19 +117,14 @@ makeApplication foundation = do
 
 makeLogWare :: App -> IO Middleware
 makeLogWare foundation =
-  mkRequestLogger
-    def
-      { outputFormat =
-          if appDetailedRequestLogging $ appSettings foundation
-            then Detailed True
-            else
-              Apache
-                ( if appIpFromHeader $ appSettings foundation
-                    then FromFallback
-                    else FromSocket
-                ),
-        destination = Logger $ loggerSet $ appLogger foundation
-      }
+  mkRequestLogger def{ outputFormat =
+                         if appDetailedRequestLogging $ appSettings foundation
+                         then Detailed True
+                         else Apache (if appIpFromHeader
+                                        $ appSettings foundation
+                                      then FromFallback
+                                      else FromSocket)
+                     , destination  = Logger $ loggerSet $ appLogger foundation }
 
 -- | Warp settings for the given foundation value.
 warpSettings :: App -> Settings
