@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 01ca8bce4fe79d05f42cc3a372dc6420fe59745291128debf6e50bc8ad9171d2
+-- hash: dd74859638e784b58cf207167e8572c6728012f4f6616ddf516373864564451d
 
 name:           yesod-app
 version:        0.0.0
@@ -86,6 +86,7 @@ library
     , safe
     , safe-exceptions
     , servant
+    , servant-flatten
     , servant-server
     , shakespeare
     , template-haskell
@@ -164,6 +165,7 @@ executable yesod-app
     , safe
     , safe-exceptions
     , servant
+    , servant-flatten
     , servant-server
     , shakespeare
     , template-haskell
@@ -195,10 +197,8 @@ test-suite test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Handler.CommentSpec
       Handler.CommonSpec
       Handler.HomeSpec
-      Handler.ProfileSpec
       TestImport
       Paths_yesod_app
   hs-source-dirs:
@@ -245,6 +245,7 @@ test-suite test
     , safe
     , safe-exceptions
     , servant
+    , servant-flatten
     , servant-server
     , shakespeare
     , template-haskell

@@ -41,6 +41,7 @@ dependencies:
 - safe
 - servant
 - servant-server
+- servant-flatten
 - shakespeare
 - template-haskell
 - text
