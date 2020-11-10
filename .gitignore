@@ -9,7 +9,9 @@ config/client_session_key.aes
 *.sqlite3-wal
 .hsenv*
 cabal-dev/
+.hie/
 .stack-work/
+.vscode/
 yesod-devel/
 .cabal-sandbox
 cabal.sandbox.config
